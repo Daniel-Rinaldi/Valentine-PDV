@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Tabela de Preços - RedM Velho Oeste</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- Google Material Symbols (Material Design 3) -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- Tipografia Vintage e Faroeste para o Canvas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=IM+Fell+English:ital@0;1&family=Oswald:wght@500;600;700&family=Rye&family=Smokum&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Estilos da Interface (MD3 Style) */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #141218; /* MD3 Dark Surface */
+      color: #E6E1E5; /* MD3 Dark On-Surface */
+    }
+    .md3-surface-container { background-color: #1D1B20; }
+    .md3-surface-container-high { background-color: #2B2930; }
+    .md3-primary { background-color: #D0BCFF; color: #381E72; }
+    .md3-primary-text { color: #D0BCFF; }
+    .md3-outline { border-color: #938F99; }
+    
+    .md3-input {
+      background-color: #141218;
+      border: 1px solid #49454F;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: white;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .md3-input:focus {
+      border-color: #D0BCFF;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #141218; }
+    ::-webkit-scrollbar-thumb { background: #49454F; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #938F99; }
+
+    /* Estilos do Canvas Gerado (Vintage/RedM) */
+    .font-western-title { font-family: 'Smokum', cursive, serif; letter-spacing: 0.04em; }
+    .font-western-sub { font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 0.16em; }
+    .font-parchment-body { font-family: 'Oswald', sans-serif; letter-spacing: 0.04em; }
+    .font-vintage-serif { font-family: 'IM Fell English', serif; }
+
+    .theme-parchment {
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12) 0%, rgba(138, 92, 49, 0.22) 70%, rgba(54, 30, 12, 0.65) 100%),
+                  radial-gradient(ellipse at top left, rgba(235, 196, 142, 0.85) 0%, transparent 70%),
+                  radial-gradient(ellipse at bottom right, rgba(184, 134, 76, 0.8) 0%, transparent 70%),
+                  #e3c291;
+      color: #2b180a;
+    }
+    .theme-dark-wood {
+      background-color: #2a160d;
+      background-image: linear-gradient(145deg, #381f12 0%, #201007 100%);
+      color: #ebd3be;
+    }
+    .uniform-frame { border: 8px solid #452915; outline: 4px solid #1a273b; }
+    .theme-dark-wood.uniform-frame { border: 10px solid #1a0b05; outline: 3px solid #0a0402; }
+    .inner-vintage-border { border: 2px solid #5a371c; outline: 1px dashed rgba(89, 53, 26, 0.7); outline-offset: -6px; }
+    .theme-dark-wood .inner-vintage-border { border: 2px solid #522d16; outline: 1px dashed rgba(209, 156, 91, 0.3); }
+
+    .western-row-line { border-bottom: 1px solid rgba(94, 56, 26, 0.35); }
+    .theme-dark-wood .western-row-line { border-bottom: 1px solid rgba(120, 78, 42, 0.35); }
+    
+    /* MD3 Tabs */
+    .tab-btn {
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      border-bottom: 2px solid #D0BCFF;
+      color: #D0BCFF;
+      background: rgba(208, 188, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- MD3 Top App Bar -->
+  <header class="md3-surface-container px-4 py-3 sticky top-0 z-40 shadow-sm flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined md3-primary-text text-3xl">receipt_long</span>
+      <div>
+        <h1 class="text-lg font-medium tracking-wide">Tabelas Velho Oeste</h1>
+        <p class="text-xs text-[#CAC4D0]">Gerador estilo RedM (MD3 UI)</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnExportAll" class="md3-primary px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 hover:opacity-90 transition">
+        <span class="material-symbols-outlined text-[20px]">download</span>
+        Exportar PNG
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-[1400px] w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Painel Esquerdo (Controles e Listas) -->
+    <section class="lg:col-span-4 flex flex-col gap-4">
+      
+      <!-- MD3 Config Card -->
+      <div class="md3-surface-container rounded-3xl p-5 shadow-sm">
+        <h2 class="text-sm font-medium text-[#CAC4D0] mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">settings</span> Configurações Gerais
+        </h2>
+        <div class="space-y-4 text-sm">
+          <div>
+            <label class="block text-xs text-[#CAC4D0] mb-1">Título e Subtítulo</label>
+            <div class="flex gap-2">
+              <input id="inputTitle" type="text" class="w-full bg-[#141218] border border-[#49454F] rounded-lg px-3 py-2 text-white outline-none focus:border-[#D0BCFF]">
+              <input id="inputSubtitle" type="text" class="w-full bg-[#141218] border border-[#49454F] rounded-lg px-3 py-2 text-white outline-none focus:border-[#D0BCFF]">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-[#CAC4D0] mb-1">Estilo do Papel</label>
+              <select id="selectPaperTheme" class="w-full bg-[#141218] border border-[#49454F] rounded-lg px-3 py-2 text-white outline-none focus:border-[#D0BCFF]">
+                <option value="parchment" selected>Pergaminho</option>
+                <option value="dark-wood">Madeira Escura</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-[#CAC4D0] mb-1">Rodapé</label>
+              <input id="inputFooterStamp" type="text" class="w-full bg-[#141218] border border-[#49454F] rounded-lg px-3 py-2 text-white outline-none focus:border-[#D0BCFF]">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-[#CAC4D0] mb-1">Observações (Opcional)</label>
+            <input id="inputObs" type="text" placeholder="Ex: Valores sujeitos a alteração" class="w-full bg-[#141218] border border-[#49454F] rounded-lg px-3 py-2 text-white outline-none focus:border-[#D0BCFF]">
+          </div>
+        </div>
+      </div>
+
+      <!-- MD3 List Card com Tabs -->
+      <div class="md3-surface-container rounded-3xl flex-1 flex flex-col shadow-sm overflow-hidden min-h-[400px]">
+        
+        <!-- Tabs -->
+        <div class="flex border-b border-[#49454F]">
+          <button id="tabLoja" class="tab-btn active flex-1 py-3 text-sm font-medium text-[#CAC4D0] flex items-center justify-center gap-2" onclick="switchTab('loja')">
+            <span class="material-symbols-outlined text-[18px]">storefront</span> Loja
+          </button>
+          <button id="tabCavalos" class="tab-btn flex-1 py-3 text-sm font-medium text-[#CAC4D0] flex items-center justify-center gap-2" onclick="switchTab('cavalos')">
+            <span class="material-symbols-outlined text-[18px]">pets</span> Cavalos
+          </button>
+        </div>
+
+        <!-- Lista dinâmica -->
+        <div class="p-4 flex-1 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-[#CAC4D0]" id="lblContagem">Itens</span>
+            <button id="btnResetDefaults" class="text-xs text-[#D0BCFF] hover:underline">Restaurar Padrão</button>
+          </div>
+          
+          <div id="itemsEditorContainer" class="flex-1 overflow-y-auto max-h-[380px] space-y-2 pr-1">
+            <!-- Renderizado via JS -->
+          </div>
+
+          <button id="btnAddNewItem" onclick="openDialog(-1)" class="mt-4 w-full py-2.5 rounded-full border border-[#49454F] hover:bg-[#2B2930] text-sm font-medium transition flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">add</span> Adicionar Registro
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Painel Direito (Canvas Preview) -->
+    <section class="lg:col-span-8 flex flex-col gap-4">
+      
+      <!-- Toolbar da Paginação (se Loja) -->
+      <div id="paginationToolbar" class="md3-surface-container rounded-full px-5 py-2 flex items-center justify-between shadow-sm hidden">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-medium text-[#CAC4D0]">Páginas:</span>
+          <div id="pagesNavigation" class="flex gap-1"></div>
+        </div>
+      </div>
+
+      <!-- Preview Board -->
+      <div class="bg-black/40 p-4 rounded-3xl border border-[#49454F] overflow-x-auto shadow-inner flex justify-center items-start h-full">
+        
+        <div id="westernBoardContainer" class="uniform-frame theme-parchment rounded min-w-[880px] w-[880px] p-5 relative select-none">
+          <div class="inner-vintage-border rounded p-4 relative h-full flex flex-col">
+            
+            <header class="relative flex items-center justify-between pb-3 border-b-2 border-[#5a371c] mb-3">
+              <!-- Estrela em SVG para evitar erro de alinhamento do html2canvas -->
+              <div class="flex items-center gap-2.5">
+                <div class="w-14 h-14 rounded-full bg-[#151e2b] border-2 border-[#7a4c25] flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9 text-[#dfa763] drop-shadow-md">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </div>
+              </div>
+              
+              <!-- Títulos com margens fixas -->
+              <div class="text-center px-2 flex-1 pb-1">
+                <h2 id="viewTitle" style="line-height: 1;" class="font-western-title text-5xl uppercase drop-shadow-sm text-[#2e1809] mb-3"></h2>
+                <p id="viewSubtitle" class="font-western-sub text-sm font-extrabold tracking-widest uppercase text-[#4a2810] mt-2"></p>
+              </div>
+
+              <!-- Estrela em SVG -->
+              <div class="flex items-center gap-2.5">
+                <div class="w-14 h-14 rounded-full bg-[#151e2b] border-2 border-[#7a4c25] flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9 text-[#dfa763] drop-shadow-md">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </div>
+              </div>
+            </header>
+
+            <!-- Tabela Loja (Item | Min | Max) -->
+            <div id="tableLojaContainer" class="w-full flex-1">
+              <div class="grid grid-cols-12 py-2 px-3 border-b-2 border-[#633b19] font-western-sub text-sm font-extrabold uppercase text-[#3b1d09]">
+                <div class="col-span-6">ITEM</div>
+                <div class="col-span-3 text-center">PREÇO MÍNIMO</div>
+                <div class="col-span-3 text-center">PREÇO MÁXIMO</div>
+              </div>
+              <div id="tableLojaRows" class="font-parchment-body"></div>
+            </div>
+
+            <!-- Tabela Cavalos (Duas Colunas: Nº | RAÇA | VALOR) -->
+            <div id="tableCavalosContainer" class="w-full hidden flex-1 flex gap-6">
+              <!-- Coluna Esquerda -->
+              <div class="flex-1 border-r-2 border-[#5a371c]/30 pr-4">
+                <div class="grid grid-cols-12 py-1 px-1 border-b-2 border-[#633b19] font-western-sub text-xs font-extrabold uppercase text-[#3b1d09]">
+                  <div class="col-span-2 text-center">Nº</div>
+                  <div class="col-span-7">RAÇA</div>
+                  <div class="col-span-3 text-right">VALOR</div>
+                </div>
+                <div id="tableCavalosLeftRows" class="font-parchment-body"></div>
+              </div>
+              <!-- Coluna Direita -->
+              <div class="flex-1 pl-2">
+                <div class="grid grid-cols-12 py-1 px-1 border-b-2 border-[#633b19] font-western-sub text-xs font-extrabold uppercase text-[#3b1d09]">
+                  <div class="col-span-2 text-center">Nº</div>
+                  <div class="col-span-7">RAÇA</div>
+                  <div class="col-span-3 text-right">VALOR</div>
+                </div>
+                <div id="tableCavalosRightRows" class="font-parchment-body"></div>
+              </div>
+            </div>
+
+            <!-- Container de Observação (Oculto se vazio) -->
+            <div id="obsContainer" class="mt-4 pt-2 hidden text-center border-t border-[#683f1d]/20">
+              <span class="font-western-sub text-[10px] font-extrabold text-[#4a2810] tracking-widest uppercase">OBS:</span>
+              <span id="viewObsText" class="font-parchment-body text-[13px] ml-1 text-[#2e1809] tracking-wide"></span>
+            </div>
+
+            <footer class="mt-3 pt-2.5 border-t border-[#683f1d]/60 flex items-center justify-between text-xs font-vintage-serif px-2">
+              <span id="pageIndicatorText" class="font-bold tracking-widest uppercase text-[11px] text-[#4f2c12]"></span>
+              <span id="viewFooterStamp" class="tracking-widest uppercase text-[11px] font-bold text-[#5c3517]"></span>
+            </footer>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal / Dialog de Edição -->
+  <div id="itemDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden backdrop-blur-sm">
+    <div class="md3-surface-container-high rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 border border-[#49454F] m-4">
+      <h3 id="dialogTitle" class="text-xl font-medium text-[#E6E1E5]">Adicionar Item</h3>
+      
+      <!-- Formulário Loja -->
+      <div id="dialogFormLoja" class="flex flex-col gap-3 hidden">
+        <div>
+          <label class="block text-xs text-[#CAC4D0] mb-1">Nome do Item</label>
+          <input id="dlgLojaName" type="text" class="md3-input w-full" placeholder="Ex: Corda Trançada">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs text-[#CAC4D0] mb-1">Preço Mínimo</label>
+            <input id="dlgLojaMin" type="text" class="md3-input w-full" placeholder="Ex: 2,28">
+          </div>
+          <div>
+            <label class="block text-xs text-[#CAC4D0] mb-1">Preço Máximo</label>
+            <input id="dlgLojaMax" type="text" class="md3-input w-full" placeholder="Ex: 2,63">
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário Cavalos -->
+      <div id="dialogFormCavalos" class="flex flex-col gap-3 hidden">
+        <div class="grid grid-cols-3 gap-2">
+          <div class="col-span-1">
+            <label class="block text-xs text-[#CAC4D0] mb-1">Número</label>
+            <input id="dlgCavaloId" type="number" class="md3-input w-full" placeholder="Ex: 34">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs text-[#CAC4D0] mb-1">Valor</label>
+            <input id="dlgCavaloPrice" type="text" class="md3-input w-full" placeholder="Ex: 500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-[#CAC4D0] mb-1">Nome da Raça</label>
+          <input id="dlgCavaloBreed" type="text" class="md3-input w-full" placeholder="Ex: Arabian">
+        </div>
+      </div>
+
+      <!-- Ações do Modal -->
+      <div class="flex justify-end gap-2 mt-2">
+        <button onclick="closeDialog()" class="text-[#D0BCFF] hover:bg-[#D0BCFF]/10 px-5 py-2 rounded-full font-medium transition text-sm">Cancelar</button>
+        <button onclick="saveDialog()" class="bg-[#D0BCFF] text-[#381E72] hover:opacity-90 px-5 py-2 rounded-full font-medium transition text-sm">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dados Iniciais Extraídos
+    const DEFAULT_SHOP_ITEMS = [
+      { id: "1", name: "CORDA TRANÇADA", min: "2,28", max: "2,63" },
+      { id: "2", name: "MISTURA DE ERVAS PARA CAVALO", min: "0,96", max: "1,11" },
+      { id: "3", name: "ÓLEO DE CASCO", min: "1,10", max: "1,30" },
+      { id: "4", name: "REMÉDIO PARA CAVALO", min: "2,99", max: "3,45" },
+      { id: "5", name: "ESTIMULANTE DE CAVALO", min: "1,82", max: "2,10" },
+      { id: "6", name: "BOOST PARA CAVALO", min: "2,08", max: "2,40" },
+      { id: "7", name: "ESCOVA DE CAVALO", min: "7,09", max: "8,18" },
+      { id: "8", name: "LAÇO PADRÃO", min: "45,00", max: "55,00" },
+      { id: "9", name: "SUPORTE DE SELA 01", min: "30,00", max: "-" },
+      { id: "10", name: "SUPORTE DE SELA 02", min: "35,00", max: "-" },
+      { id: "11", name: "SUPORTE DE SELA 03", min: "40,00", max: "-" }
+    ];
+
+    const DEFAULT_HORSES = [
+      { id: 1, breed: "Mangy", price: "10" },
+      { id: 2, breed: "Tennessee Walker", price: "20" },
+      { id: 3, breed: "Morgan", price: "30" },
+      { id: 4, breed: "Kentucky Saddle", price: "40" },
+      { id: 5, breed: "American Paint horse", price: "90" },
+      { id: 6, breed: "Montarias de Trabalho", price: "100" },
+      { id: 7, breed: "Suffolk punch", price: "100" },
+      { id: 8, breed: "Dutch Warm Blood", price: "100" },
+      { id: 9, breed: "Ardennes", price: "110" },
+      { id: 10, breed: "Appaloosa", price: "120" },
+      { id: 11, breed: "Kladruber", price: "150" },
+      { id: 12, breed: "Shire", price: "160" },
+      { id: 13, breed: "Belgian", price: "160" },
+      { id: 14, breed: "Hungarian", price: "170" },
+      { id: 15, breed: "Thoroughbred", price: "200" },
+      { id: 16, breed: "American standard", price: "240" },
+      { id: 17, breed: "Norfolkroadster", price: "260" },
+      { id: 18, breed: "Criollo", price: "270" },
+      { id: 19, breed: "Nokota", price: "290" },
+      { id: 20, breed: "Turkoman", price: "320" },
+      { id: 21, breed: "Andalusian", price: "360" },
+      { id: 22, breed: "Mustang", price: "380" },
+      { id: 23, breed: "Gypsy cob", price: "380" },
+      { id: 24, breed: "Breton", price: "410" },
+      { id: 25, breed: "Missouri Fox Trotter", price: "410" },
+      { id: 26, breed: "Connemara Pony", price: "450" },
+      { id: 27, breed: "Welsh Cob", price: "450" },
+      { id: 28, breed: "Arabian", price: "470" },
+      { id: 29, breed: "Akhal-Teke", price: "600" },
+      { id: 30, breed: "Clydesdale", price: "750" },
+      { id: 31, breed: "Fresian", price: "750" },
+      { id: 32, breed: "Mangalarga Marchador", price: "800" },
+      { id: 33, breed: "Montarias Especiais", price: "1000" }
+    ];
+
+    let appState = {
+      activeTab: 'loja',
+      title: "TABELA DE PREÇOS",
+      subtitle: "GERAL",
+      footerStamp: "REGISTRO OFICIAL • CONDADO",
+      obs: "",
+      paperTheme: "parchment",
+      shopItems: JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS)),
+      horseItems: JSON.parse(JSON.stringify(DEFAULT_HORSES)),
+      currentPage: 0,
+      shopRowsPerPage: 11
+    };
+
+    let editingIndex = -1; 
+
+    const elements = {
+      inputTitle: document.getElementById('inputTitle'),
+      inputSubtitle: document.getElementById('inputSubtitle'),
+      inputFooterStamp: document.getElementById('inputFooterStamp'),
+      inputObs: document.getElementById('inputObs'),
+      selectPaperTheme: document.getElementById('selectPaperTheme'),
+      viewTitle: document.getElementById('viewTitle'),
+      viewSubtitle: document.getElementById('viewSubtitle'),
+      viewFooterStamp: document.getElementById('viewFooterStamp'),
+      viewObsText: document.getElementById('viewObsText'),
+      obsContainer: document.getElementById('obsContainer'),
+      board: document.getElementById('westernBoardContainer'),
+      itemsEditorContainer: document.getElementById('itemsEditorContainer'),
+      lblContagem: document.getElementById('lblContagem'),
+      tableLojaContainer: document.getElementById('tableLojaContainer'),
+      tableLojaRows: document.getElementById('tableLojaRows'),
+      tableCavalosContainer: document.getElementById('tableCavalosContainer'),
+      tableCavalosLeftRows: document.getElementById('tableCavalosLeftRows'),
+      tableCavalosRightRows: document.getElementById('tableCavalosRightRows'),
+      paginationToolbar: document.getElementById('paginationToolbar'),
+      pagesNavigation: document.getElementById('pagesNavigation'),
+      pageIndicatorText: document.getElementById('pageIndicatorText'),
+      itemDialog: document.getElementById('itemDialog')
+    };
+
+    function init() {
+      elements.inputTitle.value = appState.title;
+      elements.inputSubtitle.value = appState.subtitle;
+      elements.inputFooterStamp.value = appState.footerStamp;
+      elements.inputObs.value = appState.obs;
+      elements.selectPaperTheme.value = appState.paperTheme;
+      
+      bindEvents();
+      switchTab('loja');
+    }
+
+    function bindEvents() {
+      elements.inputTitle.addEventListener('input', (e) => { appState.title = e.target.value; renderBoard(); });
+      elements.inputSubtitle.addEventListener('input', (e) => { appState.subtitle = e.target.value; renderBoard(); });
+      elements.inputFooterStamp.addEventListener('input', (e) => { appState.footerStamp = e.target.value; renderBoard(); });
+      elements.inputObs.addEventListener('input', (e) => { appState.obs = e.target.value; renderBoard(); });
+      elements.selectPaperTheme.addEventListener('change', (e) => { appState.paperTheme = e.target.value; renderBoard(); });
+      
+      document.getElementById('btnExportAll').onclick = async () => {
+        const dataUrl = await captureCanvas();
+        triggerDownload(dataUrl, `tabela_${appState.activeTab}.png`);
+      };
+
+      document.getElementById('btnResetDefaults').onclick = () => {
+        if(appState.activeTab === 'loja') appState.shopItems = JSON.parse(JSON.stringify(DEFAULT_SHOP_ITEMS));
+        else appState.horseItems = JSON.parse(JSON.stringify(DEFAULT_HORSES));
+        renderList();
+        renderBoard();
+      };
+    }
+
+    function switchTab(tab) {
+      appState.activeTab = tab;
+      appState.currentPage = 0;
+      
+      document.getElementById('tabLoja').classList.toggle('active', tab === 'loja');
+      document.getElementById('tabCavalos').classList.toggle('active', tab === 'cavalos');
+      
+      if (tab === 'cavalos') {
+        appState.title = "VALORES DO TREINAMENTO";
+        appState.subtitle = "DE CAVALO POR RAÇA";
+      } else {
+        appState.title = "TABELA DE PREÇOS";
+        appState.subtitle = "LOJA GERAL";
+      }
+      
+      elements.inputTitle.value = appState.title;
+      elements.inputSubtitle.value = appState.subtitle;
+
+      renderList();
+      renderBoard();
+    }
+
+    function renderList() {
+      const list = appState.activeTab === 'loja' ? appState.shopItems : appState.horseItems;
+      elements.lblContagem.textContent = `${list.length} Registros`;
+      elements.itemsEditorContainer.innerHTML = '';
+
+      list.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = "bg-[#211F26] border border-[#49454F] rounded-xl p-3 flex items-center justify-between gap-3";
+        
+        let contentHtml = '';
+        if (appState.activeTab === 'loja') {
+          contentHtml = `<div class="flex-1"><h4 class="text-sm font-medium text-white">${item.name}</h4><div class="text-xs text-[#CAC4D0]">Min: $${item.min} | Max: $${item.max}</div></div>`;
+        } else {
+          contentHtml = `
+            <div class="w-8 text-center text-xs font-bold text-[#CAC4D0] bg-[#141218] rounded py-1">${item.id}</div>
+            <div class="flex-1"><h4 class="text-sm font-medium text-white">${item.breed}</h4></div>
+            <div class="text-sm text-[#D0BCFF] font-medium">$${item.price}</div>
+          `;
+        }
+
+        card.innerHTML = `
+          ${contentHtml}
+          <div class="flex items-center gap-1">
+            <button class="text-[#CAC4D0] hover:text-[#D0BCFF] p-1" onclick="openDialog(${index})" title="Editar">
+              <span class="material-symbols-outlined text-[20px]">edit</span>
+            </button>
+            <button class="text-[#CAC4D0] hover:text-[#D0BCFF] p-1" onclick="removeItem(${index})" title="Excluir">
+              <span class="material-symbols-outlined text-[20px]">delete</span>
+            </button>
+          </div>
+        `;
+        elements.itemsEditorContainer.appendChild(card);
+      });
+    }
+
+    window.openDialog = function(index) {
+      editingIndex = index;
+      const isEdit = index >= 0;
+      
+      document.getElementById('dialogTitle').textContent = isEdit ? 'Editar Registro' : 'Adicionar Registro';
+      
+      const formLoja = document.getElementById('dialogFormLoja');
+      const formCavalos = document.getElementById('dialogFormCavalos');
+      
+      if (appState.activeTab === 'loja') {
+        formLoja.classList.remove('hidden');
+        formCavalos.classList.add('hidden');
+        
+        if (isEdit) {
+          const item = appState.shopItems[index];
+          document.getElementById('dlgLojaName').value = item.name;
+          document.getElementById('dlgLojaMin').value = item.min;
+          document.getElementById('dlgLojaMax').value = item.max;
+        } else {
+          document.getElementById('dlgLojaName').value = '';
+          document.getElementById('dlgLojaMin').value = '';
+          document.getElementById('dlgLojaMax').value = '';
+        }
+      } else {
+        formLoja.classList.add('hidden');
+        formCavalos.classList.remove('hidden');
+        
+        if (isEdit) {
+          const item = appState.horseItems[index];
+          document.getElementById('dlgCavaloId').value = item.id;
+          document.getElementById('dlgCavaloBreed').value = item.breed;
+          document.getElementById('dlgCavaloPrice').value = item.price;
+        } else {
+          const nextId = appState.horseItems.length > 0 
+            ? Math.max(...appState.horseItems.map(h => parseInt(h.id) || 0)) + 1 
+            : 1;
+          document.getElementById('dlgCavaloId').value = nextId;
+          document.getElementById('dlgCavaloBreed').value = '';
+          document.getElementById('dlgCavaloPrice').value = '';
+        }
+      }
+      
+      elements.itemDialog.classList.remove('hidden');
+    }
+
+    window.closeDialog = function() {
+      elements.itemDialog.classList.add('hidden');
+    }
+
+    window.saveDialog = function() {
+      if (appState.activeTab === 'loja') {
+        const newItem = {
+          id: editingIndex >= 0 ? appState.shopItems[editingIndex].id : Date.now().toString(),
+          name: document.getElementById('dlgLojaName').value.trim() || 'NOVO ITEM',
+          min: document.getElementById('dlgLojaMin').value.trim() || '-',
+          max: document.getElementById('dlgLojaMax').value.trim() || '-'
+        };
+        
+        if (editingIndex >= 0) appState.shopItems[editingIndex] = newItem;
+        else appState.shopItems.push(newItem);
+        
+      } else {
+        const newItem = {
+          id: document.getElementById('dlgCavaloId').value.trim() || '0',
+          breed: document.getElementById('dlgCavaloBreed').value.trim() || 'Raça Indefinida',
+          price: document.getElementById('dlgCavaloPrice').value.trim() || '0'
+        };
+        
+        if (editingIndex >= 0) appState.horseItems[editingIndex] = newItem;
+        else appState.horseItems.push(newItem);
+      }
+      
+      closeDialog();
+      renderList();
+      renderBoard();
+    }
+
+    window.removeItem = function(index) {
+      if (appState.activeTab === 'loja') appState.shopItems.splice(index, 1);
+      else appState.horseItems.splice(index, 1);
+      renderList();
+      renderBoard();
+    }
+
+    function renderBoard() {
+      elements.viewTitle.textContent = appState.title;
+      elements.viewSubtitle.textContent = appState.subtitle;
+      elements.viewFooterStamp.textContent = appState.footerStamp;
+      
+      if (appState.obs && appState.obs.trim() !== "") {
+        elements.viewObsText.textContent = appState.obs;
+        elements.obsContainer.classList.remove('hidden');
+      } else {
+        elements.obsContainer.classList.add('hidden');
+      }
+      
+      elements.board.className = `uniform-frame rounded min-w-[880px] w-[880px] p-5 relative select-none ${appState.paperTheme === 'parchment' ? 'theme-parchment' : 'theme-dark-wood'}`;
+
+      if (appState.activeTab === 'loja') {
+        elements.tableLojaContainer.classList.remove('hidden');
+        elements.tableCavalosContainer.classList.add('hidden');
+        elements.paginationToolbar.classList.remove('hidden');
+        
+        renderLojaRows();
+      } else {
+        elements.tableLojaContainer.classList.add('hidden');
+        elements.tableCavalosContainer.classList.remove('hidden');
+        elements.paginationToolbar.classList.add('hidden');
+        elements.pageIndicatorText.textContent = "LISTA ÚNICA";
+        
+        renderCavalosRows();
+      }
+    }
+
+    function renderLojaRows() {
+      const totalPages = Math.ceil(appState.shopItems.length / appState.shopRowsPerPage) || 1;
+      elements.pageIndicatorText.textContent = `PÁGINA ${appState.currentPage + 1} DE ${totalPages}`;
+      
+      elements.pagesNavigation.innerHTML = '';
+      for (let i = 0; i < totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.className = `px-2.5 py-1 rounded text-xs font-bold ${i === appState.currentPage ? 'bg-[#D0BCFF] text-[#381E72]' : 'bg-[#2B2930] text-[#CAC4D0]'}`;
+        btn.textContent = i + 1;
+        btn.onclick = () => { appState.currentPage = i; renderBoard(); };
+        elements.pagesNavigation.appendChild(btn);
+      }
+
+      const start = appState.currentPage * appState.shopRowsPerPage;
+      const pageItems = appState.shopItems.slice(start, start + appState.shopRowsPerPage);
+      
+      elements.tableLojaRows.innerHTML = '';
+      pageItems.forEach(item => {
+        elements.tableLojaRows.innerHTML += `
+          <div class="grid grid-cols-12 py-2 px-3 items-center western-row-line text-[#241306]">
+            <div class="col-span-6 font-bold text-lg uppercase">${item.name}</div>
+            <div class="col-span-3 text-center text-xl font-bold tabular-nums">$${item.min}</div>
+            <div class="col-span-3 text-center text-xl font-bold tabular-nums">$${item.max}</div>
+          </div>
+        `;
+      });
+    }
+
+    function renderCavalosRows() {
+      elements.tableCavalosLeftRows.innerHTML = '';
+      elements.tableCavalosRightRows.innerHTML = '';
+
+      const half = Math.ceil(appState.horseItems.length / 2);
+      
+      appState.horseItems.forEach((item, index) => {
+        const html = `
+          <div class="grid grid-cols-12 py-1 px-1 items-center western-row-line text-[#241306]">
+            <div class="col-span-2 text-center text-lg font-bold">${item.id}</div>
+            <div class="col-span-7 font-bold text-lg">${item.breed}</div>
+            <div class="col-span-3 text-right text-xl font-bold text-[#1a3811] drop-shadow-sm tabular-nums">$${item.price}</div>
+          </div>
+        `;
+        if (index < half) {
+          elements.tableCavalosLeftRows.innerHTML += html;
+        } else {
+          elements.tableCavalosRightRows.innerHTML += html;
+        }
+      });
+    }
+
+    async function captureCanvas() {
+      const canvas = await html2canvas(elements.board, { scale: 2, useCORS: true, backgroundColor: null });
+      return canvas.toDataURL("image/png");
+    }
+
+    function triggerDownload(dataUrl, filename) {
+      const link = document.createElement("a");
+      link.download = filename; link.href = dataUrl;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
